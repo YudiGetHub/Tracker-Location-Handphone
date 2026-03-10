@@ -1,0 +1,15 @@
+{
+  "name": "News Control Center",
+  "short_name": "NCC-Radar",
+  "start_url": "/dashboard.html",
+  "display": "standalone",
+  "background_color": "#0b0e14",
+  "theme_color": "#cc0000",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2544/2544131.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
