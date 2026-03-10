@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEWS CONTROL CENTER - Monitoring Reader</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#cc0000">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2544/2544131.png">
+
     <style>
         :root { --news-red: #cc0000; --terminal-green: #00ff41; --panel-bg: #0b0e14; }
         body { font-family: 'Courier New', Courier, monospace; background: var(--panel-bg); color: var(--terminal-green); padding: 20px; margin: 0; text-transform: uppercase; overflow-x: hidden; }
@@ -31,12 +38,17 @@
         .info-label { color: #8b949e; font-size: 10px; margin-bottom: 5px; display: block; }
         
         .no-data { text-align: center; padding: 40px; color: #444; font-style: italic; }
+        
+        /* Notif Permission Bar */
+        #notifBar { background: #ffd700; color: #000; padding: 10px; text-align: center; font-weight: bold; font-size: 12px; cursor: pointer; display: none; }
     </style>
 </head>
 <body>
 
+<div id="notifBar" onclick="requestNotif()">KLIK DISINI UNTUK MENGAKTIFKAN NOTIFIKASI PEMBACA BARU</div>
+
 <div class="header">
-    <div>[ SYSTEM: NEWS MONITORING v3.5 - RADAR MODE ]</div>
+    <div>[ SYSTEM: NEWS MONITORING v4.0 - STANDALONE ]</div>
     <div class="live-indicator">● LIVE FEED CONNECTION</div>
 </div>
 
@@ -84,7 +96,20 @@
     const BASE_URL = "https://trackeronlineviral-default-rtdb.asia-southeast1.firebasedatabase.app/targets";
     let knownReaders = new Set();
 
-    // Update Jam Realtime
+    // Meminta Izin Notifikasi
+    if (Notification.permission !== "granted") {
+        document.getElementById('notifBar').style.display = "block";
+    }
+
+    function requestNotif() {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                document.getElementById('notifBar').style.display = "none";
+                new Notification("Sistem Notifikasi Aktif!");
+            }
+        });
+    }
+
     function updateClock() {
         const now = new Date();
         document.getElementById('currentTime').innerText = now.toLocaleTimeString();
@@ -110,13 +135,20 @@
                 const r = data[id];
                 count++;
                 
-                // Hitung durasi aktif
                 const durationSec = Math.floor((Date.now() - r.start_time) / 1000);
                 const durationStr = durationSec > 60 ? `${Math.floor(durationSec/60)}M ${durationSec%60}S` : `${durationSec}S`;
 
-                // Alarm jika ada ID baru muncul
+                // Cek Reader Baru
                 if (!knownReaders.has(id)) {
                     document.getElementById('alarmSound').play().catch(()=>{});
+                    
+                    // Kirim Push Notification jika izin diberikan
+                    if (Notification.permission === "granted") {
+                        new Notification("🚨 PEMBACA BARU!", {
+                            body: `ID: ${id} mendeteksi berita viral.`,
+                            icon: "https://cdn-icons-png.flaticon.com/512/2544/2544131.png"
+                        });
+                    }
                     knownReaders.add(id);
                 }
 
@@ -160,21 +192,16 @@
             </div>
         `;
         
-        // Google Maps Embed URL Fix
         const mapUrl = `https://maps.google.com/maps?q=${lat},${lon}&t=&z=18&ie=UTF8&iwloc=&output=embed`;
         
         document.getElementById('mapBox').innerHTML = `
-            <iframe 
-                src="${mapUrl}" 
-                allowfullscreen>
-            </iframe>
+            <iframe src="${mapUrl}" allowfullscreen></iframe>
             <div style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; border: 2px solid var(--terminal-green); opacity: 0.2;"></div>
         `;
     }
 
-    // Jalankan Sinkronisasi Otomatis tiap 3 detik
     setInterval(updateDashboard, 3000);
-    updateDashboard(); // Initial Load
+    updateDashboard();
 </script>
 
 </body>
